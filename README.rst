@@ -24,7 +24,7 @@ procstats - Operating System Process Stats
 ----------------
 
     * psutil - https://pypi.python.org/pypi/psutil
-    * tox - http://tox.testrun.org/ (for testing only)
+    * tox - http://tox.testrun.org/ (used for testing only)
 
 ---------
     Tests
