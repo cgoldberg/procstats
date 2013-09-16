@@ -2,7 +2,9 @@
     procstats
 =============
 
-procstats - Operating System Process Stats
+procstats - Operating System Process Stats.
+
+attach to a running process and collect stats/metrics.
 
 --------
     Info
