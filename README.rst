@@ -23,17 +23,17 @@ procstats - Operating System Process Stats
     Requirements
 ----------------
 
-    * psutil [https://pypi.python.org/pypi/psutil]
-    * Tox (for testing only) [http://tox.testrun.org/]
+    * psutil - https://pypi.python.org/pypi/psutil
+    * tox - http://tox.testrun.org/ (for testing only)
 
-----
+---------
+    Tests
+---------
 
 To run the tests::
 
     $ python -m unittest discover
 
-To sdist-package, install, and test against all supported Python versions::
+To sdist-package, install, and test against every supported Python version::
 
     $ tox
-
-----
