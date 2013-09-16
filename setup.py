@@ -24,5 +24,14 @@ setup(name='procstats',
       author='Corey Goldberg',
       author_email='cgoldberg _at_ gmail.com',
       url='https://github.com/cgoldberg/procstats',
-      py_modules=['procstats'],
+      py_modules=['procstats', ],
+      install_requires=['psutil', ],
+      classifiers=(
+          'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.3',
+      )
       )
