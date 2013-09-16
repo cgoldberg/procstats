@@ -17,6 +17,7 @@
 #
 
 import os
+import subprocess
 import unittest
 
 from procstats import ProcStats
@@ -25,7 +26,8 @@ from procstats import ProcStats
 class ProcStatsTestCase(unittest.TestCase):
 
     def test_create_by_pid(self):
-        ps = ProcStats(os.getpid())
+        pid = os.getpid()
+        ps = ProcStats(pid)
         self.assertIsInstance(ps.pid, int)
 
     def test_create_by_bad_pid(self):
@@ -33,7 +35,8 @@ class ProcStatsTestCase(unittest.TestCase):
         self.assertRaises(Exception, ProcStats, invalid_pid)
 
     def test_create_by_name(self):
-        ps = ProcStats('init')
+        name = 'init'
+        ps = ProcStats(name)
         self.assertIsInstance(ps.pid, int)
 
     def test_create_by_bad_name(self):
@@ -41,7 +44,8 @@ class ProcStatsTestCase(unittest.TestCase):
         self.assertRaises(Exception, ProcStats, invalid_name)
 
     def test_get_proc_stats(self):
-        ps = ProcStats(os.getpid())
+        pid = os.getpid()
+        ps = ProcStats(pid)
         stats = ps.get_stats()
         self.assertIsInstance(stats['name'], str)
         self.assertGreaterEqual(stats['cpu_percent'], 0.0)
@@ -56,6 +60,19 @@ class ProcStatsTestCase(unittest.TestCase):
         self.assertIsInstance(stats['io_write_bytes'], int)
         self.assertIsInstance(stats['num_threads'], int)
         self.assertIsInstance(stats['num_fds'], int)
+
+
+class ProcStatsSubprocessTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.p = subprocess.Popen(['sleep', '2'],)
+        self.addCleanup(self.p.kill)
+
+    def test_with_subprocess(self):
+        ps = ProcStats(self.p.pid)
+        self.assertIsInstance(ps.pid, int)
+        stats = ps.get_stats()
+        self.assertEqual(stats['name'], 'sleep')
 
 
 if __name__ == '__main__':
