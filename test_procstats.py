@@ -24,19 +24,19 @@ from procstats import ProcStats
 
 class ProcStatsTestCase(unittest.TestCase):
 
-    def test_by_pid(self):
+    def test_create_by_pid(self):
         ps = ProcStats(os.getpid())
         self.assertIsInstance(ps.pid, int)
 
-    def test_by_bad_pid(self):
+    def test_create_by_bad_pid(self):
         invalid_pid = 9999999
         self.assertRaises(Exception, ProcStats, invalid_pid)
 
-    def test_by_name(self):
+    def test_create_by_name(self):
         ps = ProcStats('init')
         self.assertIsInstance(ps.pid, int)
 
-    def test_by_bad_name(self):
+    def test_create_by_bad_name(self):
         invalid_name = 'not_a_process'
         self.assertRaises(Exception, ProcStats, invalid_name)
 
