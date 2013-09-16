@@ -48,15 +48,16 @@ class ProcStats:
         return pid
 
     def get_stats(self):
+        p = self.proc
         io = self.proc.get_io_counters()
         return dict(
-            name=self.proc.name,
-            cpu_percent=self.proc.get_cpu_percent(interval=0.5),
-            memory_percent=self.proc.get_memory_percent(),
+            name=p.name,
+            cpu_percent=p.get_cpu_percent(interval=0.5),
+            memory_percent=p.get_memory_percent(),
             io_read_count=io.read_count,
             io_write_count=io.write_count,
             io_read_bytes=io.read_bytes,
             io_write_bytes=io.write_bytes,
-            num_threads=self.proc.get_num_threads(),
-            num_fds=self.proc.get_num_fds(),
+            num_threads=p.get_num_threads(),
+            num_fds=p.get_num_fds(),
         )

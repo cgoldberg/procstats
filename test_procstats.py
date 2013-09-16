@@ -18,6 +18,7 @@
 
 import os
 import subprocess
+import time
 import unittest
 
 from procstats import ProcStats
@@ -62,7 +63,7 @@ class ProcStatsTestCase(unittest.TestCase):
         self.assertIsInstance(stats['num_fds'], int)
 
 
-class ProcStatsSubprocessTestCase(unittest.TestCase):
+class ProcStatsRunningSubprocessTestCase(unittest.TestCase):
 
     def setUp(self):
         self.p = subprocess.Popen(['sleep', '2'],)
@@ -73,6 +74,15 @@ class ProcStatsSubprocessTestCase(unittest.TestCase):
         self.assertIsInstance(ps.pid, int)
         stats = ps.get_stats()
         self.assertEqual(stats['name'], 'sleep')
+
+
+class ProcStatsDeadSubprocessTestCase(unittest.TestCase):
+
+    def test_dead_subprocess(self):
+        p = subprocess.Popen(['sleep', '0.5'],)
+        ps = ProcStats(p.pid)
+        time.sleep(1.0)
+        self.assertRaises(Exception, ps.get_stats)
 
 
 if __name__ == '__main__':
