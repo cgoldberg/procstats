@@ -16,15 +16,24 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import datetime
 import os
 import subprocess
 import time
 import unittest
 
+import psutil
+
 from procstats import ProcStats
 
 
 class ProcStatsTestCase(unittest.TestCase):
+
+    def test_init(self):
+        pid = os.getpid()
+        ps = ProcStats(pid)
+        self.assertIsInstance(ps.pid, int)
+        self.assertGreaterEqual(ps.interval, 0.0)
 
     def test_create_by_pid(self):
         pid = os.getpid()
@@ -33,37 +42,40 @@ class ProcStatsTestCase(unittest.TestCase):
 
     def test_create_by_bad_pid(self):
         invalid_pid = 9999999
-        self.assertRaises(Exception, ProcStats, invalid_pid)
+        self.assertRaises(psutil.NoSuchProcess, ProcStats, invalid_pid)
 
-    def test_create_by_name(self):
-        name = 'init'
-        ps = ProcStats(name)
-        self.assertIsInstance(ps.pid, int)
-
-    def test_create_by_bad_name(self):
-        invalid_name = 'not_a_process'
-        self.assertRaises(Exception, ProcStats, invalid_name)
-
-    def test_get_proc_stats(self):
+    def test_get_stat(self):
         pid = os.getpid()
         ps = ProcStats(pid)
+        stat = ps.get_stat()
+        self.assertIsInstance(stat['name'], str)
+        self.assertGreaterEqual(stat['cpu_percent'], 0.0)
+        self.assertLessEqual(stat['cpu_percent'], 100.0)
+        self.assertIsInstance(stat['cpu_percent'], float)
+        self.assertGreaterEqual(stat['memory_percent'], 0.0)
+        self.assertLessEqual(stat['memory_percent'], 100.0)
+        self.assertIsInstance(stat['memory_percent'], float)
+        self.assertIsInstance(stat['io_read_count'], int)
+        self.assertIsInstance(stat['io_write_count'], int)
+        self.assertIsInstance(stat['io_read_bytes'], int)
+        self.assertIsInstance(stat['io_write_bytes'], int)
+        self.assertIsInstance(stat['num_threads'], int)
+        self.assertIsInstance(stat['num_fds'], int)
+
+    def test_run_get_stats(self):
+        pid = os.getpid()
+        ps = ProcStats(pid, 1.0)
+        ps.start()
+        time.sleep(3)
+        ps.stop()
         stats = ps.get_stats()
-        self.assertIsInstance(stats['name'], str)
-        self.assertGreaterEqual(stats['cpu_percent'], 0.0)
-        self.assertLessEqual(stats['cpu_percent'], 100.0)
-        self.assertIsInstance(stats['cpu_percent'], float)
-        self.assertGreaterEqual(stats['memory_percent'], 0.0)
-        self.assertLessEqual(stats['memory_percent'], 100.0)
-        self.assertIsInstance(stats['memory_percent'], float)
-        self.assertIsInstance(stats['io_read_count'], int)
-        self.assertIsInstance(stats['io_write_count'], int)
-        self.assertIsInstance(stats['io_read_bytes'], int)
-        self.assertIsInstance(stats['io_write_bytes'], int)
-        self.assertIsInstance(stats['num_threads'], int)
-        self.assertIsInstance(stats['num_fds'], int)
+        self.assertGreater(len(stats), 1)
+        dt, stat = stats[0]
+        self.assertIsInstance(dt, datetime.datetime)
+        self.assertGreater(len(stat), 1)
 
 
-class ProcStatsRunningSubprocessTestCase(unittest.TestCase):
+class ProcStatsSubprocessTestCase(unittest.TestCase):
 
     def setUp(self):
         self.p = subprocess.Popen(['sleep', '2'],)
@@ -72,17 +84,14 @@ class ProcStatsRunningSubprocessTestCase(unittest.TestCase):
     def test_with_subprocess(self):
         ps = ProcStats(self.p.pid)
         self.assertIsInstance(ps.pid, int)
-        stats = ps.get_stats()
-        self.assertEqual(stats['name'], 'sleep')
-
-
-class ProcStatsDeadSubprocessTestCase(unittest.TestCase):
+        stat = ps.get_stat()
+        self.assertEqual(stat['name'], 'sleep')
 
     def test_dead_subprocess(self):
         p = subprocess.Popen(['sleep', '0.5'],)
         ps = ProcStats(p.pid)
         time.sleep(1.0)
-        self.assertRaises(Exception, ps.get_stats)
+        self.assertRaises(psutil.AccessDenied, ps.get_stat)
 
 
 if __name__ == '__main__':

@@ -15,49 +15,57 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from datetime import datetime
+from threading import Thread
+import time
+
 import psutil
 
 
-class ProcStats:
+class ProcStats(Thread):
 
-    def __init__(self, name_or_pid, interval=10):
-        self.name_or_pid = name_or_pid
-        try:
-            self.proc = psutil.Process(name_or_pid)
-            self.pid = name_or_pid
-        except TypeError:
-            pid = self.lookup_pid(name_or_pid)
-            self.proc = psutil.Process(pid)
-            self.pid = pid
+    def __init__(self, pid, interval=10.0):
+        Thread.__init__(self)
+        self.pid = pid
+        self.interval = interval
+        self.stats = []
 
-    def start(self):
-        pass
+        self.proc = psutil.Process(pid)
+
+    def run(self):
+        self.is_running = True
+        while self.is_running:
+            stat = self.get_stat()
+            self.stats.append((datetime.now(), stat))
+            time.sleep(self.interval)
 
     def stop(self):
-        pass
-
-    def lookup_pid(self, name):
-        pid = None
-        procs = [p for p in psutil.process_iter() if p.name == name]
-        if not procs:
-            raise psutil.NoSuchProcess('Can not find pid for: %r' % name)
-        elif len(procs) > 1:
-            raise Exception('Can not find unique process for: %r' % name)
-        else:
-            pid = procs[0].pid
-        return pid
+        self.is_running = False
 
     def get_stats(self):
+        return self.stats
+
+    def get_stat(self):
         p = self.proc
-        io = self.proc.get_io_counters()
+        name = p.name
+        io = p.get_io_counters()
+        io_read_count = io.read_count
+        io_write_count = io.write_count
+        io_read_bytes = io.read_bytes
+        io_write_bytes = io.write_bytes
+        cpu_percent = p.get_cpu_percent(interval=0.5)
+        memory_percent = p.get_memory_percent()
+        num_threads = p.get_num_threads()
+        num_fds = p.get_num_fds()
+
         return dict(
-            name=p.name,
-            cpu_percent=p.get_cpu_percent(interval=0.5),
-            memory_percent=p.get_memory_percent(),
-            io_read_count=io.read_count,
-            io_write_count=io.write_count,
-            io_read_bytes=io.read_bytes,
-            io_write_bytes=io.write_bytes,
-            num_threads=p.get_num_threads(),
-            num_fds=p.get_num_fds(),
+            name=name,
+            io_read_count=io_read_count,
+            io_write_count=io_write_count,
+            io_read_bytes=io_read_bytes,
+            io_write_bytes=io_write_bytes,
+            cpu_percent=cpu_percent,
+            memory_percent=memory_percent,
+            num_threads=num_threads,
+            num_fds=num_fds,
         )
